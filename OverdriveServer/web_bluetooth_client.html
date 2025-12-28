@@ -286,6 +286,67 @@
             box-shadow: 0 0 15px var(--neon-blue);
         }
 
+        /* Drive Mode Buttons */
+        .mode-btn {
+            padding: 5px 12px;
+            font-size: 0.7em;
+            font-family: 'Orbitron';
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.1);
+            color: #888;
+            border: 1px solid #444;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mode-btn.active,
+        .mode-btn:hover {
+            background: var(--neon-blue);
+            color: #000;
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        /* Lane Control Arrows */
+        .lane-btn {
+            background: rgba(0, 240, 255, 0.2);
+            border: 2px solid var(--neon-blue);
+            color: var(--neon-blue);
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            border-radius: 4px;
+        }
+
+        .lane-btn:hover {
+            background: var(--neon-blue);
+            color: #000;
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+
+        .lane-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Accelerator Pedal */
+        .accelerator-pedal {
+            border-radius: 8px;
+            transition: all 0.1s;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .accelerator-pedal:hover {
+            box-shadow: 0 0 20px #0f0;
+            transform: translateY(-2px);
+        }
+
+        .accelerator-pedal:active {
+            background: linear-gradient(135deg, #0a0, #050) !important;
+            transform: translateY(0);
+            box-shadow: 0 0 30px #0f0, inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
         /* Sci-Fi Slider */
         input[type=range] {
             -webkit-appearance: none;
@@ -701,30 +762,38 @@
 
         // --- CAR CLASS ---
         class Car {
-            constructor(device) {
+            constructor(device, profile) {
                 this.device = device;
-                this.server = null;
+                this.name = device.name;
+                this.profile = profile;
                 this.writeChar = null;
-                this.id = device.id;
-                this.name = device.name || "Unknown Unit";
+                this.notifyChar = null;
+                this.v4mode = false;
 
-                // Game Stats
-                this.maxHp = 100;
-                this.hp = 100;
-                this.maxEnergy = 100;
-                this.energy = 100;
-                this.dead = false;
+                this.currentPieceId = 0;
+                this.currentPieceName = "---";
+                this.laneOffset = 0;
+                this.laps = 0;
                 this.score = 0;
 
-                // Physics/State
-                this.laps = 0;
-                this.lastPieceId = 0;
-                this.currentPieceId = 0;
-                this.currentPieceName = "UNKNOWN";
-                this.laneOffset = 0.0;
+                this.hp = 100;
+                this.maxHp = 100;
+                this.energy = 100;
+                this.maxEnergy = 100;
+                this.dead = false;
                 this.targetSpeed = 0;
 
-                this.v4mode = document.getElementById('cb-global-v4').checked;
+                // New control properties
+                this.currentSpeed = 0;
+                this.driveMode = 'DEFAULT'; // ECO, DEFAULT, SPORT
+                this.maxSpeeds = {
+                    ECO: 400,
+                    DEFAULT: 700,
+                    SPORT: 1000
+                };
+                this.accelerating = false;
+                this.currentLane = 0; // -68 to 68
+
                 this.div = null;
                 this.pingInterval = null;
 
@@ -988,18 +1057,33 @@
                         LOC: <span class="val-loc">---</span> | OFF: <span class="val-off">0.0</span> | LAPS: <span class="val-laps">0</span>
                     </div>
                     <div class="controls-layer">
-                        <div style="display:flex; justify-content:space-between; color:#888; font-size:0.8em;">
-                             <span>THROTTLE</span> <span>LANE</span>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <div style="color:#888; font-size:0.75em;">DRIVE MODE</div>
+                            <div class="drive-mode-selector">
+                                <button class="mode-btn mode-eco">ECO</button>
+                                <button class="mode-btn mode-default active">DEFAULT</button>
+                                <button class="mode-btn mode-sport">SPORT</button>
+                            </div>
                         </div>
-                        <div style="display:flex; gap:10px;">
-                             <input type="range" class="speed-slider" min="0" max="1000" step="50" value="0">
-                             <input type="range" class="lane-slider" min="-68" max="68" step="1" value="0">
+                        <div style="display:flex; gap:15px; margin-bottom:10px;">
+                            <div style="flex:1;">
+                                <div style="color:#888; font-size:0.75em; text-align:center; margin-bottom:5px;">LANE</div>
+                                <div style="display:flex; gap:10px; justify-content:center;">
+                                    <button class="lane-btn lane-left" style="font-size:1.5em; width:50px; height:50px;">◀</button>
+                                    <button class="lane-btn lane-right" style="font-size:1.5em; width:50px; height:50px;">▶</button>
+                                </div>
+                            </div>
+                            <div style="flex:1;">
+                                <div style="color:#888; font-size:0.75em; text-align:center; margin-bottom:5px;">THROTTLE</div>
+                                <button class="accelerator-pedal" style="width:100%; height:50px; font-size:1.2em; background:linear-gradient(135deg, #0f0, #0a0); color:#000; font-weight:bold; border:2px solid #0f0; cursor:pointer;">
+                                    HOLD TO GO
+                                </button>
+                            </div>
                         </div>
                         <div class="weapon-grid">
                             <button class="weapon-btn btn-shoot">${this.profile.primary} (${this.profile.primaryCost})</button>
                             <button class="weapon-btn utility btn-ability">${this.profile.ability} (${this.profile.abilityCost})</button>
                         </div>
-                         <button class="weapon-btn" style="width:100%; margin-top:5px; border-color:#fff; color:#fff;" onclick="this.getRootNode().host.takeDamage(25)">DEBUG: SELF DAMAGE 25</button>
                     </div>
                 `;
 
@@ -1028,18 +1112,67 @@
                     }
                 };
 
-                const speedSl = this.div.querySelector('.speed-slider');
-                speedSl.oninput = (e) => this.setSpeed(parseInt(e.target.value));
-                const laneSl = this.div.querySelector('.lane-slider');
-                laneSl.onchange = (e) => this.setLane(parseFloat(e.target.value));
+                // Drive mode buttons
+                this.div.querySelectorAll('.mode-btn').forEach(btn => {
+                    btn.onclick = () => {
+                        this.div.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        if (btn.classList.contains('mode-eco')) this.driveMode = 'ECO';
+                        else if (btn.classList.contains('mode-sport')) this.driveMode = 'SPORT';
+                        else this.driveMode = 'DEFAULT';
+                    };
+                });
+
+                // Lane control arrows
+                this.div.querySelector('.lane-left').onclick = () => {
+                    this.currentLane = Math.max(-68, this.currentLane - 17); // Move one lane left
+                    this.setLane(this.currentLane);
+                };
+                this.div.querySelector('.lane-right').onclick = () => {
+                    this.currentLane = Math.min(68, this.currentLane + 17); // Move one lane right
+                    this.setLane(this.currentLane);
+                };
+
+                // Accelerator pedal (hold to accelerate)
+                const pedal = this.div.querySelector('.accelerator-pedal');
+                pedal.onmousedown = pedal.ontouchstart = () => {
+                    this.accelerating = true;
+                    this.accelerate();
+                };
+                pedal.onmouseup = pedal.onmouseleave = pedal.ontouchend = () => {
+                    this.accelerating = false;
+                    this.decelerate();
+                };
 
                 this.div.querySelector('.btn-shoot').onclick = () => this.shootPrimary();
                 this.div.querySelector('.btn-ability').onclick = () => this.activateAbility();
-                this.div.lastElementChild.querySelector('button').onclick = () => this.takeDamage(25);
 
                 this.div.host = this;
                 container.appendChild(this.div);
                 this.updateUI();
+            }
+
+            accelerate() {
+                if (!this.accelerating) return;
+                const maxSpeed = this.maxSpeeds[this.driveMode];
+                const increment = this.driveMode === 'SPORT' ? 100 : this.driveMode === 'ECO' ? 30 : 50;
+
+                this.currentSpeed = Math.min(maxSpeed, this.currentSpeed + increment);
+                this.setSpeed(this.currentSpeed);
+
+                if (this.accelerating) {
+                    setTimeout(() => this.accelerate(), 100);
+                }
+            }
+
+            decelerate() {
+                const decrement = 100;
+                this.currentSpeed = Math.max(0, this.currentSpeed - decrement);
+                this.setSpeed(this.currentSpeed);
+
+                if (this.currentSpeed > 0) {
+                    setTimeout(() => this.decelerate(), 50);
+                }
             }
 
             updateUI() {
