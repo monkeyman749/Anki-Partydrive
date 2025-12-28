@@ -223,7 +223,7 @@ namespace OverdriveServer
                 device.GattServerDisconnected -= (sender, args) => { Dispose(true); }; //remove the event handler
                 if (!alertImplicit) { device.Gatt.Disconnect(); } //disconnect the car
                 readCharacteristic.CharacteristicValueChanged -= (sender, args) => { Program.carSystem.CarCharacteristicChanged(sender, args, this); }; //remove the event handler
-                device.Dispose(); //dispose of the device
+// device.Dispose(); //dispose of the device (Not available in this version)
             }
             Program.carSystem.RemoveCar(id, (requestedOffsetMM, requestedSpeedMMPS)); //remove the car from the system
         }

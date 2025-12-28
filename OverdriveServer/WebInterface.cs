@@ -11,7 +11,7 @@ namespace OverdriveServer
     {
         public void Start()
         {
-            string[] args = new string[] { "--urls", "http://localhost:7117" };
+            string[] args = new string[] { "--urls", "http://0.0.0.0:7117" };
             CreateHostBuilder(args).Build().RunAsync();
         }
         //Depricated in favor of WebsocketManager
@@ -79,6 +79,12 @@ namespace OverdriveServer
                             //simple html page that lists the cars and has buttons to control them
                             //load the index.html file from the current directory
                             string page = System.IO.File.ReadAllText("index.html");
+                            context.Response.ContentType = "text/html";
+                            await context.Response.WriteAsync(page);
+                        }
+                        else if (context.Request.Path == "/bluetooth")
+                        {
+                            string page = System.IO.File.ReadAllText("web_bluetooth_client.html");
                             context.Response.ContentType = "text/html";
                             await context.Response.WriteAsync(page);
                         }

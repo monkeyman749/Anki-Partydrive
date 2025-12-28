@@ -106,7 +106,8 @@ namespace OverdriveServer{
         EVENT_CAR_DELOCALIZED = "car_delocalized", //Car delocalized (currently not used, see MSG_CAR_DELOCALIZED for the time being)
         EVENT_CAR_TRACKING_UPDATE = "car_tracking_update", //Car tracking update (see CarLocationData)
         EVENT_TR_DATA = "track_data", //Track data (an array of SegmentData)
-        EVENT_CAR_DATA = "car_data"; //Car data (an array of CarData)
+        EVENT_CAR_DATA = "car_data", //Car data (an array of CarData)
+        EVENT_CLIENT_UPDATE = "client_update_bc"; // Broadcast from other clients
 
         public const string SV_CAR_MOVE = "car_move_update", //Car move update [id:speed:offset] (speed and offset may be - meaning keep existing value)
         SV_REFRESH_CONFIGS = "refresh_configs", //Refresh configs (used to reload the car configs, name, speedbalance ect)
@@ -121,7 +122,8 @@ namespace OverdriveServer{
         SV_GET_CARS = "request_cars", //Request cars (should return EVENT_CAR_DATA with the car data)
         SV_CAR_FLASH = "car_flash", //DONT USE THIS UNLESS YOU KNOW WHAT YOU ARE DOING || Flash car [id:path] (used to flash a car, path should be the ota file)
         SV_TTS = "tts", //Text to speech [message] (used to send a message to the TTS engine)
-        SV_CLIENT_CLOSED = "client_closed"; //Client closed (used to indicate a client has closed the connection intentionally)
+        SV_CLIENT_CLOSED = "client_closed", //Client closed (used to indicate a client has closed the connection intentionally)
+        SV_CLIENT_UPDATE = "client_update"; // Client sending its own data to be relayed
         public static class UtilityMessages { //these are ids for the utility messages (parse them as strings)
             public const string MSG_CAR_CONNECTED = "cc", //:carID:name (used to indicate a car has connected)
             MSG_CAR_DISCONNECTED = "cd", //:carID (used to indicate a car has disconnected)

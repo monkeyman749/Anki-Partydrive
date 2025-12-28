@@ -4,9 +4,9 @@ namespace OverdriveServer {
         public static readonly float[] Lanes = {72.25f, 63.75f, 55.25f, 46.75f, 38.25f, 29.75f, 21.25f, 12.75f, 4.25f, -4.25f, -12.75f, -21.25f, -29.75f, -38.25f, -46.75f, -55.25f, -63.75f, -72.25f};
         [System.Serializable]
         public class Segment{
-            public readonly SegmentType type;
-            public readonly int internalID;
-            public readonly bool flipped;
+            public SegmentType type { get; private set; }
+            public int internalID { get; private set; }
+            public bool flipped { get; private set; }
             public int up, down;
             public Segment(SegmentType type, int id, bool flipped){
                 this.type = type;

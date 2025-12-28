@@ -1,4 +1,4 @@
-﻿using System.Speech.Synthesis;
+﻿// using System.Speech.Synthesis;
 using OverdriveServer.Tracking;
 using static OverdriveServer.NetStructures;
 namespace OverdriveServer
@@ -14,7 +14,7 @@ namespace OverdriveServer
         public static TrackManager trackManager = new TrackManager();
         public static Location location = new Location();
         public static TrackScanner trackScanner = new TrackScanner();
-        static readonly SpeechSynthesizer synth = new SpeechSynthesizer();
+        // static readonly SpeechSynthesizer synth = new SpeechSynthesizer(); // Removed for Linux compatibility
         static async Task Main(string[] args)
         {
             if (args.Length == 1 && args[0] == "-client") { requireClient = true; }
@@ -40,8 +40,9 @@ namespace OverdriveServer
         public static void CheckCurrentTrack() { trackManager.AlertIfTrackIsValid(); }
         public static void TTS(string message)
         {
-            synth.SetOutputToDefaultAudioDevice();
-            synth.Speak(message);
+            // synth.SetOutputToDefaultAudioDevice();
+            // synth.Speak(message);
+            Console.WriteLine($"[TTS]: {message}");
         }
         public static string IntToByteString(int number) => $"0x{number:X2}"; // More concise using expression body
 

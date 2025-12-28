@@ -186,6 +186,11 @@ namespace OverdriveServer
                 {
                     Program.clientClosedGracefully = true; //set the client closed flag to true
                 }
+                else if (webhookData.EventType == SV_CLIENT_UPDATE)
+                {
+                    // Relay the payload to everyone
+                    Notify(EVENT_CLIENT_UPDATE, webhookData.Payload);
+                }
             }
             catch (Exception ex)
             {
